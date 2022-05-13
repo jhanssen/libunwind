@@ -1,8 +1,8 @@
 define(pkg_major, 1)
 define(pkg_minor, 6)
-define(pkg_extra, -rc1)
+define(pkg_extra, 2)
 define(pkg_maintainer, libunwind-devel@nongnu.org)
-define(mkvers, $1.$2$3)
+define(mkvers, $1.$2.$3)
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT([libunwind],[mkvers(pkg_major, pkg_minor, pkg_extra)],[pkg_maintainer])
 AC_CONFIG_SRCDIR(src/mi/backtrace.c)
@@ -98,7 +98,6 @@ AC_DEFUN([SET_ARCH],[
         [amd64],[$2=x86_64],
         [tile*],[$2=tilegx],
         [riscv*],[$2=riscv],
-        [loongarch64*],[$2=loongarch64],
         [$2=$1])
 ]) dnl SET_ARCH
 
@@ -121,7 +120,7 @@ esac
 
 AC_ARG_ENABLE(coredump,
 	AS_HELP_STRING([--enable-coredump],[building libunwind-coredump library]),,
-        [AS_CASE([$host_arch], [aarch64*|arm*|mips*|sh*|x86*|tile*|riscv*|loongarch64], [enable_coredump=yes], [enable_coredump=no])]
+        [AS_CASE([$host_arch], [aarch64*|arm*|mips*|sh*|x86*|tile*|riscv*], [enable_coredump=yes], [enable_coredump=no])]
 )
 
 AC_MSG_CHECKING([if we should build libunwind-coredump])
@@ -190,7 +189,6 @@ AM_CONDITIONAL(ARCH_SH, test x$target_arch = xsh)
 AM_CONDITIONAL(ARCH_TILEGX, test x$target_arch = xtilegx)
 AM_CONDITIONAL(ARCH_S390X, test x$target_arch = xs390x)
 AM_CONDITIONAL(ARCH_RISCV, test x$target_arch = xriscv)
-AM_CONDITIONAL(ARCH_LOONGARCH64, test x$target_arch = xloongarch64)
 AM_CONDITIONAL(OS_LINUX, expr x$target_os : xlinux >/dev/null)
 AM_CONDITIONAL(OS_HPUX, expr x$target_os : xhpux >/dev/null)
 AM_CONDITIONAL(OS_FREEBSD, expr x$target_os : xfreebsd >/dev/null)
@@ -201,7 +199,7 @@ AC_MSG_CHECKING([for ELF helper width])
 case "${target_arch}" in
 (arm|hppa|ppc32|x86|sh) use_elf32=yes; AC_MSG_RESULT([32]);;
 (aarch64|ia64|ppc64|x86_64|s390x|tilegx)  use_elf64=yes; AC_MSG_RESULT([64]);;
-(mips|riscv|loongarch64)                  use_elfxx=yes; AC_MSG_RESULT([xx]);;
+(mips|riscv)                 use_elfxx=yes; AC_MSG_RESULT([xx]);;
 *)                     AC_MSG_ERROR([Unknown ELF target: ${target_arch}])
 esac
 AM_CONDITIONAL(USE_ELF32, [test x$use_elf32 = xyes])
@@ -248,7 +246,6 @@ case $target_arch in
   mips*) enable_cxx_exceptions=no;;
   tile*) enable_cxx_exceptions=no;;
   s390x*) enable_cxx_exceptions=no;;
-  loongarch*) enable_cxx_exceptions=no;;
   *) enable_cxx_exceptions=yes;;
 esac
 ])
@@ -446,7 +443,7 @@ AC_SUBST(DLLIB)
 AC_SUBST(BACKTRACELIB)
 
 AC_PATH_PROG([LATEX2MAN],[latex2man])
-if test "x$LATEX2MAN" = "x" && test "x$enable_documentation" = "xyes"; then
+if test "x$LATEX2MAN" = "x"; then
   AC_MSG_WARN([latex2man not found. Install latex2man. Disabling docs.])
   enable_documentation="no";
 fi

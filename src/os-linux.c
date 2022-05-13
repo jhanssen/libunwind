@@ -26,9 +26,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #include <limits.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
 
 #include "libunwind_i.h"
 #include "os-linux.h"
@@ -44,8 +41,7 @@ tdep_get_elf_image (struct elf_image *ei, pid_t pid, unw_word_t ip,
   char root[sizeof ("/proc/0123456789/root")], *cp;
   char *full_path;
   struct stat st;
-  const unsigned long full_path_buff_sz = 1024;
-  char                full_path_buff[full_path_buff_sz];
+
 
   if (maps_init (&mi, pid) < 0)
     return -1;
@@ -73,16 +69,7 @@ tdep_get_elf_image (struct elf_image *ei, pid_t pid, unw_word_t ip,
 
   if (!stat(root, &st) && S_ISDIR(st.st_mode))
     {
-      unsigned long _len = strlen(root) + strlen(mi.path) + 1;
-      if(_len >= full_path_buff_sz)
-        {
-          full_path = (char*) malloc(_len);
-        }
-      else
-        {
-          snprintf(full_path_buff, full_path_buff_sz, "%s%s", root, mi.path);
-          full_path = &full_path_buff[0];
-        }
+      full_path = (char*) malloc (strlen (root) + strlen (mi.path) + 1);
       if (!full_path)
         full_path = mi.path;
       else
@@ -98,7 +85,7 @@ tdep_get_elf_image (struct elf_image *ei, pid_t pid, unw_word_t ip,
     }
   rc = elf_map_image (ei, full_path);
 
-  if (full_path && full_path != mi.path && full_path != &full_path_buff[0])
+  if (full_path && full_path != mi.path)
     free (full_path);
 
   maps_close (&mi);

@@ -115,10 +115,9 @@ tdep_init (void)
 
   mi_init ();
   dwarf_init ();
-
-#ifndef UNW_REMOTE_ONLY
   tdep_init_mem_validate ();
 
+#ifndef UNW_REMOTE_ONLY
   riscv_local_addr_space_init ();
 #endif
   atomic_store(&tdep_init_done, 1);  /* signal that we're initialized... */

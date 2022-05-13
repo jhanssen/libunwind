@@ -508,9 +508,6 @@ setup_fde (struct dwarf_cursor *c, dwarf_state_record_t *sr)
   for (i = 0; i < DWARF_NUM_PRESERVED_REGS + 2; ++i)
     set_reg (sr, i, DWARF_WHERE_SAME, 0);
 
-  // SP defaults to CFA (but is overridable)
-  set_reg (sr, TDEP_DWARF_SP, DWARF_WHERE_CFA, 0);
-
   struct dwarf_cie_info *dci = c->pi.unwind_info;
   sr->rs_current.ret_addr_column  = dci->ret_addr_column;
   unw_word_t addr = dci->cie_instr_start;
@@ -795,14 +792,14 @@ apply_reg_state (struct dwarf_cursor *c, struct dwarf_reg_state *rs)
       /* As a special-case, if the stack-pointer is the CFA and the
          stack-pointer wasn't saved, popping the CFA implicitly pops
          the stack-pointer as well.  */
-      if ((rs->reg.val[DWARF_CFA_REG_COLUMN] == TDEP_DWARF_SP)
-          && (TDEP_DWARF_SP < ARRAY_SIZE(rs->reg.val))
-          && (DWARF_IS_NULL_LOC(c->loc[TDEP_DWARF_SP])))
+      if ((rs->reg.val[DWARF_CFA_REG_COLUMN] == UNW_TDEP_SP)
+          && (UNW_TDEP_SP < ARRAY_SIZE(rs->reg.val))
+          && (rs->reg.where[UNW_TDEP_SP] == DWARF_WHERE_SAME))
           cfa = c->cfa;
       else
         {
           regnum = dwarf_to_unw_regnum (rs->reg.val[DWARF_CFA_REG_COLUMN]);
-          if ((ret = unw_get_reg (dwarf_to_cursor(c), regnum, &cfa)) < 0)
+          if ((ret = unw_get_reg ((unw_cursor_t *) c, regnum, &cfa)) < 0)
             return ret;
         }
       cfa += rs->reg.val[DWARF_CFA_OFF_COLUMN];
@@ -837,10 +834,6 @@ apply_reg_state (struct dwarf_cursor *c, struct dwarf_reg_state *rs)
           break;
 
         case DWARF_WHERE_SAME:
-          break;
-
-        case DWARF_WHERE_CFA:
-          new_loc[i] = DWARF_VAL_LOC (c, cfa);
           break;
 
         case DWARF_WHERE_CFAREL:
@@ -960,11 +953,13 @@ find_reg_state (struct dwarf_cursor *c, dwarf_state_record_t *sr)
 	  cache->links[c->prev_rs].hint = index + 1;
 	  c->prev_rs = index;
 	}
-      if (ret >= 0)
-        tdep_reuse_frame (c, cache->links[index].signal_frame);
       put_rs_cache (c->as, cache, &saved_mask);
     }
-  return ret;
+  if (ret < 0)
+      return ret;
+  if (cache)
+    tdep_reuse_frame (c, cache->links[index].signal_frame);
+  return 0;
 }
 
 /* The function finds the saved locations and applies the register

@@ -168,7 +168,7 @@ typedef enum
 
     UNW_TDEP_IP = UNW_AARCH64_X30,
     UNW_TDEP_SP = UNW_AARCH64_SP,
-    UNW_TDEP_EH = UNW_AARCH64_X0
+    UNW_TDEP_EH = UNW_AARCH64_X0,
 
   }
 aarch64_regnum_t;
@@ -183,7 +183,7 @@ typedef struct unw_tdep_save_loc
   }
 unw_tdep_save_loc_t;
 
-#if defined(__linux__) || defined(__FreeBSD__)
+#ifdef __linux__
 /* On AArch64, we can directly use ucontext_t as the unwind context,
  * however, the __reserved struct is quite large: tune it down to only
  * the necessary used fields.  */

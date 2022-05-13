@@ -394,7 +394,7 @@ trace_lookup (unw_cursor_t *cursor,
        }
      }
 */
-HIDDEN int
+int
 tdep_trace (unw_cursor_t *cursor, void **buffer, int *size)
 {
   struct cursor *c = (struct cursor *) cursor;
